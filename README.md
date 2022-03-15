@@ -1,6 +1,6 @@
-# Wise(Clone)
+# Wise(Clone) <img alt="Wise(Clone) Logo" src="https://wise.com/public-resources/assets/logos/wise/brand_logo_inverse.svg">
 
-<img alt="Wise(Clone) Logo" src="https://wise.com/public-resources/assets/logos/wise/brand_logo_inverse.svg">
+This project was created based on Trial 1 Mission requirements for the Simba Coding Project.
 
 ## About Wise(Clone)
 
@@ -10,7 +10,7 @@ This is a clone of [Wise Web Application](https://www.wise.com) (The cheap, fast
 2. A registration page.
 3. A dashboard page, where transactions will be listed.
 4. A transaction page. 
-5. API integration to get current exchange rate from https://www.currencyconverterapi.com/. 
+5. API integration to get current exchange rate from [Free Currency Converter API](https://www.currencyconverterapi.com/). 
 6. A method to record failed transactions.
 7. A button to refund dollar account.
 
@@ -30,10 +30,13 @@ This is a clone of [Wise Web Application](https://www.wise.com) (The cheap, fast
 
 7. Run `php artisan serve` command.
 
-8. To run a single migration `php artisan migrate --path=/database/migrations/my_migration.php`.
+## Login credentials
+URL: `[Wise(Clone) Web Application](https://wiseclone.edgemep.com.ng)`
+Email: `user@wiseclone.com`
+Password: `password`
 
-9. To run single seeder `php artisan db:seed --class=UserSeeder`.
-
+## Project Screenshots
 
 ![Screenshot 1](images/screen-1.png)
+
 ![Screenshot 2](images/screen-2.png)

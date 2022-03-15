@@ -65,6 +65,14 @@
             <!--begin::Sidebar-->
             <div class="flex-lg-auto min-w-lg-300px col-5">
                 <div class="pb-5 fs-6">
+                    @if(auth()->user()->latestCurrencyBalance->USD == 0.0)
+                            <!--begin::Refund button-->
+                            <div class="flex-shrink-0 p-4 p-lg-0 me-lg-2 mb-3">
+                                <a href="{{ route('fund_account') }}" class="btn btn-sm btn-primary fw-bolder w-100 w-lg-auto">Refund Dollar Account</a>
+                            </div>
+                            <!--end::Refund button-->
+                    @endif
+
                 <p class="fs-4 mb-4">This calculation is deduced from <strong>Wise</strong> provided on <a href=“https://wise.com/gb/pricing/send-money” target=“_blank”>Wise Fees For Sending Money</a> webpage.</p>
 
                     <div class="notice d-flex bg-light-warning rounded border-warning border border-dashed mb-9 p-6">

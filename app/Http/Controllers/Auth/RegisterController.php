@@ -80,20 +80,21 @@ class RegisterController extends Controller
 
         // Credit a new user with $1000.
         $transaction = Transaction::create([
-            'user_id'             => 1,
-            'recipient_id'          => $user->id,
+            'user_id'               => $user->id,
+            'recipient_id'          => 1,
             'source_currency_id'    => $currency,
             'target_currency_id'    => $currency,
             'amount'                => $amount,
-            'target_currency_id'    => $currency,
             'rate'                  => 0.0,
+            'transfer_fee'          => 4.86,
+            'variable_fee'          => 0,
+            'fixed_fee'             => 4.86,
             'type'                  => Transaction::TYPE['Credit'],
             'status'                => Transaction::STATUS['Success'],
-            'opening_balance'       => $amount,
-            'closing_balance'       => $amount,
         ]);
 
         \App\Models\CurrencyBalance::create([
+            'user_id'           => $user->id,
             'transaction_id'    => $transaction['id'],
             'USD'               => $amount,
             'EUR'               => 0,

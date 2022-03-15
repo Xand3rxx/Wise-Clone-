@@ -42,7 +42,6 @@
     <!--begin::Global Javascript Bundle(used by all pages)-->
     <script src="{{ asset('assets/plugins/global/plugins.bundle.js') }}"></script>
     <script src="{{ asset('assets/js/scripts.bundle.js') }}"></script>
-    <script src="{{ asset('assets/js/general.js') }}"></script>
 
     <!--end::Global Javascript Bundle-->
     <!--begin::Page Custom Javascript(used by this page)-->
@@ -51,6 +50,34 @@
     @else
         <script src="{{ asset('assets/js/custom/authentication/sign-in/general.js') }}"></script>
     @endif
+    <script>
+        /**
+         * @description Display session message with Sweet Alert
+         * @param string message
+         * @param string type
+         *
+         * @returns toast
+         */
+        //Feedback from session message to be displayed with Sweet Alert
+        function displayMessage(message, type) {
+            const Toast = swal.mixin({
+                toast: true,
+                position: "top-end",
+                showConfirmButton: false,
+                timer: 8000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener("mouseenter", Swal.stopTimer);
+                    toast.addEventListener("mouseleave", Swal.resumeTimer);
+                },
+            });
+            Toast.fire({
+                icon: type,
+                //   type: 'success',
+                title: message,
+            });
+        }
+    </script>
     @stack('scripts')
     <!--end::Page Custom Javascript-->
     <!--end::Javascript-->
