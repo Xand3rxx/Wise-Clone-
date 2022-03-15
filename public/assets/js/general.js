@@ -79,13 +79,15 @@ $("#source-currency-id, #target-currency-id").change(function (event) {
         currencyBalance($sourceCurrencyId);
     }
 
-    $sourceCurrency = $('#source-amount');
-    $currentValue = removeComma($sourceCurrency.val());
-    $maxAmount = $sourceCurrency.data('max');
-    $currencySymbol = $sourceCurrency.data('symbol');
+    setTimeout(function(){
+        $sourceCurrency = $('#source-amount');
+        $currentValue = removeComma($sourceCurrency.val());
+        $maxAmount = $sourceCurrency.attr('data-max');
+        $currencySymbol = $sourceCurrency.attr('data-symbol');
 
-    // Validate ajax request parameters
-    validateRequirements($currentValue, $sourceCurrencyId, $targetCurrencyId, $maxAmount, $currencySymbol, $route);
+        // Validate ajax request parameters
+        validateRequirements($currentValue, $sourceCurrencyId, $targetCurrencyId, $maxAmount, $currencySymbol, $route);
+    }, 1000);
 });
 
 function currencyBalance($sourceCurrencyId)
@@ -107,13 +109,15 @@ function currencyBalance($sourceCurrencyId)
         // return the result
         success: function (result) {
             $sourceCurrency = $('#source-amount');
-            $sourceCurrency.val(result.sourceCurrencyBalance);
-            $sourceCurrency.attr({
-                'data-max':result.sourceCurrencyBalance,
-                'value':result.sourceCurrencyBalance,
-                'max':result.sourceCurrencyBalance,
-                'data-symbol':result.sourceCurrency.symbol
-            });
+            setTimeout(() => {
+                $sourceCurrency.val(result.sourceCurrencyBalance);
+                $sourceCurrency.attr({
+                    'data-max':result.sourceCurrencyBalance,
+                    'value':result.sourceCurrencyBalance,
+                    'max':result.sourceCurrencyBalance,
+                    'data-symbol':result.sourceCurrency.symbol
+                });
+            }, 500);
         },
         complete: function () {
             $("#spinner-icon").hide();
@@ -161,7 +165,10 @@ function validateRequirements($currentValue, $sourceCurrencyId, $targetCurrencyI
     // If current value input field is 0 or is NaN, default to 1
     if(parseFloat($currentValue) == 0 || isNaN($currentValue)){
         displayMessage("Amount to be sent cannot be less than "+ $currencySymbol+ "1","error" );
-        $sourceCurrency.val(1);
+        // $sourceCurrency.val(0);
+        ajaxConverter(parseFloat($currentValue), $sourceCurrencyId, $targetCurrencyId, $route);
+
+        // currencyBalance($sourceCurrencyId);
         return;
     }else{
         ajaxConverter(parseFloat($currentValue), $sourceCurrencyId, $targetCurrencyId, $route);
@@ -195,8 +202,6 @@ function ajaxConverter($currentValue, $sourceCurrencyId, $targetCurrencyId, $rou
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
         }
     });
-
-console.log('From ajax: ' +$currentValue);
 
     $.ajax({
         url: $route,
