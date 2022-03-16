@@ -31,7 +31,7 @@ This is a clone of [Wise Web Application](https://www.wise.com) (The cheap, fast
 7. Run `php artisan serve` command.
 
 ## Login credentials
-URL: [Wise(Clone) Web Application](https://wiseclone.edgemep.com.ng)
+URL: [Wise(Clone) Web Application](https://wiseclone.edgemep.com.ng/)
 
 Email: `user@wiseclone.com`
 
