@@ -39,12 +39,11 @@ class TransactionController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created transaction in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store()
     {
         // Validate user request
         (array) $validated = $this->validateRequest();
@@ -174,6 +173,7 @@ class TransactionController extends Controller
             // Recipient target currency
             $targetCurrency = Currency::where('id', $filters['target_currency_id'])->firstOrFail();
 
+            // Pass data to converter method
             return $this->converter($sourceCurrency, $targetCurrency, $sourceAmount, 'application.transactions.includes._transaction_breakdown');
         }
     }
@@ -246,7 +246,7 @@ class TransactionController extends Controller
     }
 
     /**
-     * Get rate.
+     * Get either currenc exchange rate or fallback rate.
      * @param  float  $rate
      *
      * @return  $rate
@@ -277,36 +277,27 @@ class TransactionController extends Controller
      */
     public function calculation(array $validated, float $amount)
     {
-        //Use default source currency($) as target currency
+        // Get charges from source and target currency ID's
         $currency = Charge::where('source_currency_id', $validated['source_currency_id'])
         ->where('target_currency_id', $validated['target_currency_id'])
         ->firstOrFail();
 
-        // Merge new variables into validated array request
+        // Merge new calculated variables into validated array request
         $validated['user_id'] = auth()->id();
-
         $validated['recipient_id'] = \App\Models\User::where('uuid', $validated['recipient_uuid'])->firstOrFail()->id;
-
         $validated['variableFee'] = $this->getVariableFee($currency['variable_percentage'], $amount);
-
         $validated['rate'] = $this->getRate($currency['rate'], $currency['sourceCurrency']['code'], $currency['targetCurrency']['code'], $amount);
-
         $validated['fixedFee'] = (float) $currency['fixed_fee'];
-
         $validated['transferFee'] = $validated['variableFee'] + $validated['fixedFee'];
-
         $validated['amountToConvert'] = $amount - $validated['transferFee'];
-
-        // Target amount after conversion
         $validated['targetAmount'] = $validated['amountToConvert'] * $validated['rate'];
-
         $validated['type'] = 'Debit';
 
         return $validated;
     }
 
     /**
-     * Validate user input fields
+     * Validate user input fields request
      */
     private function validateRequest()
     {
@@ -328,7 +319,7 @@ class TransactionController extends Controller
      * @param  int  $source_currency_id
      * @param  int  $target_currency_id
      *
-     * @return \Illuminate\Contracts\Support\Renderable
+     * @return $sourceCurrency && $sourceCurrencyBalance
      */
     public function currencyBalance(Request $request)
     {
@@ -338,17 +329,21 @@ class TransactionController extends Controller
             // Get currency details
             $sourceCurrency = Currency::findOrFail($filters['source_currency_id']);
 
-            // Source amount
+            // Last currency balance
+            $latestCurrencyBalance = auth()->user()->latestCurrencyBalance;
+
+            // Compare source amount with currency amount available
             if($filters['source_currency_id'] == 1)
             {
-                $sourceAmount = auth()->user()->latestCurrencyBalance->EUR;
+                $sourceAmount = $latestCurrencyBalance->EUR;
             }else if($filters['source_currency_id'] == 2)
             {
-                $sourceAmount = auth()->user()->latestCurrencyBalance->NGN;
+                $sourceAmount = $latestCurrencyBalance->NGN;
             }else{
-                $sourceAmount = auth()->user()->latestCurrencyBalance->USD;
+                $sourceAmount = $latestCurrencyBalance->USD;
             }
 
+            // Return ajax response
             return [
                 'sourceCurrency'            => $sourceCurrency,
                 'sourceCurrencyBalance'     => $sourceAmount,

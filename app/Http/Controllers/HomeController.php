@@ -33,7 +33,6 @@ class HomeController extends Controller
         ]);
     }
 
-
     /**
      * Refund dollar account
      *
@@ -41,14 +40,19 @@ class HomeController extends Controller
      */
     public function fundAccount()
     {
+        // Last currency balance
+        $latestCurrencyBalance = auth()->user()->latestCurrencyBalance;
+
+        // If the current dollar currency balance is not equal to zero back
+        if($latestCurrencyBalance->USD != 0){
+            return back();
+        }
+
         // Default currency ID
         (int) $currency = \App\Models\Currency::where('code', 'USD')->first()->id;
 
         // Default amount
         (int) $amount = 1000;
-
-        // Last currency balance
-        $latestCurrencyBalance = auth()->user()->latestCurrencyBalance;
 
         // Credit a new user with $1000.
         $transaction = Transaction::create([
@@ -73,6 +77,6 @@ class HomeController extends Controller
             'NGN'               => $latestCurrencyBalance->NGN,
         ]);
 
-        return redirect()->route('home')->with('success', 'Your dollar account has been credited with $1,000');
+        return redirect()->route('transaction.create')->with('success', 'Your dollar account has been credited with $1,000');
     }
 }

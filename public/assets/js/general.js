@@ -19,10 +19,7 @@ $(document).on("click", "#transfer-details-modal", function (event) {
         success: function (result) {
             setTimeout(() => {
                 // Clear modal body before appending transaction data
-                $("#modal-body").html("");
-
-                // Append transaction data
-                $("#modal-body").html(result);
+                $("#modal-body").empty().html(result);
             }, 800);
         },
         complete: function () {
@@ -45,7 +42,6 @@ $(document).on("click", "#transfer-details-modal", function (event) {
 $('.close').click(function() {
     $(".modal-backdrop").remove();
 });
-
 
 /**
  * @description Execute conversion from source amount on keyup
@@ -105,8 +101,7 @@ function currencyBalance($sourceCurrencyId)
             _token: $('meta[name="csrf-token"]').attr('content'),
             'source_currency_id': $sourceCurrencyId,
         },
-
-        // return the result
+        // Return the result
         success: function (result) {
             $sourceCurrency = $('#source-amount');
             setTimeout(() => {
@@ -154,21 +149,19 @@ function validateRequirements($currentValue, $sourceCurrencyId, $targetCurrencyI
         return;
     }
 
-     // Default back to currency balance, if current value in input field  is greater than the currency balance
-     if(parseFloat($currentValue) > parseFloat($maxAmount)){
+    // Default back to currency balance, if current value in input field is greater than the currency balance
+    if(parseFloat($currentValue) > parseFloat($maxAmount)){
         displayMessage("Amount cannot be greater than "+ $currencySymbol+ $maxAmount,"error" );
         $sourceCurrency.val($maxAmount);
         ajaxConverter(parseFloat($maxAmount), $sourceCurrencyId, $targetCurrencyId, $route);
-        return;
+    return;
     }
 
     // If current value input field is 0 or is NaN, default to 1
     if(parseFloat($currentValue) == 0 || isNaN($currentValue)){
         displayMessage("Amount to be sent cannot be less than "+ $currencySymbol+ "1","error" );
-        // $sourceCurrency.val(0);
-        ajaxConverter(parseFloat($currentValue), $sourceCurrencyId, $targetCurrencyId, $route);
 
-        // currencyBalance($sourceCurrencyId);
+        ajaxConverter(parseFloat($currentValue), $sourceCurrencyId, $targetCurrencyId, $route);
         return;
     }else{
         ajaxConverter(parseFloat($currentValue), $sourceCurrencyId, $targetCurrencyId, $route);
@@ -217,11 +210,11 @@ function ajaxConverter($currentValue, $sourceCurrencyId, $targetCurrencyId, $rou
                 '<div class="pr-calculator-fee-container d-flex justify-content-center align-items-center"><div class="tw-loader tw-loader--sm"><div class="tw-loader__stripe"></div><div class="tw-loader__stripe"></div><div class="tw-loader__stripe"></div><div class="tw-loader__stripe"></div><div class="tw-loader__stripe"></div></div></div>'
             );
         },
-        // return the result
+        // Return the result
         success: function (result) {
             setTimeout(() => {
-                $("#transaction-breakdown").html("");
-                $("#transaction-breakdown").html(result);
+                // Clear and append new result
+                $("#transaction-breakdown").empty().html(result);
                 formatAmount();
             }, 1000);
         },
@@ -256,7 +249,6 @@ function formatAmount()
  *
  * @returns toast
  */
-//Feedback from session message to be displayed with Sweet Alert
 function displayMessage(message, type) {
     const Toast = swal.mixin({
         toast: true,
@@ -271,7 +263,6 @@ function displayMessage(message, type) {
     });
     Toast.fire({
         icon: type,
-        //   type: 'success',
         title: message,
     });
 }

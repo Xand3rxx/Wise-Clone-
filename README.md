@@ -1,4 +1,4 @@
-# Wise(Clone) <img alt="Wise(Clone) Logo" src="https://wise.com/public-resources/assets/logos/wise/brand_logo_inverse.svg">
+# <img alt="Wise(Clone) Logo" src="https://wise.com/public-resources/assets/logos/wise/brand_logo.svg"> Wise(Clone) 
 
 This project was created based on Trial 1 Mission requirements for the Simba Coding Project.
 
