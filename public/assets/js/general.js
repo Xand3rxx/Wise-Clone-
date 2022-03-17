@@ -154,7 +154,7 @@ function validateRequirements($currentValue, $sourceCurrencyId, $targetCurrencyI
         displayMessage("Amount cannot be greater than "+ $currencySymbol+ $maxAmount,"error" );
         $sourceCurrency.val($maxAmount);
         ajaxConverter(parseFloat($maxAmount), $sourceCurrencyId, $targetCurrencyId, $route);
-    return;
+        return;
     }
 
     // If current value input field is 0 or is NaN, default to 1

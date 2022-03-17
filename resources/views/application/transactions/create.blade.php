@@ -65,13 +65,53 @@
             <!--begin::Sidebar-->
             <div class="flex-lg-auto min-w-lg-300px col-5">
                 <div class="pb-5 fs-6">
-                    @if(auth()->user()->latestCurrencyBalance->USD == 0.0)
-                            <!--begin::Refund button-->
-                            <div class="flex-shrink-0 p-4 p-lg-0 me-lg-2 mb-3">
-                                <a href="{{ route('fund_account') }}" class="btn btn-sm btn-primary fw-bolder w-100 w-lg-auto">Refund Dollar Account</a>
-                            </div>
-                            <!--end::Refund button-->
+                    @if($user['latestCurrencyBalance']['USD'] == 0.0)
+                        <!--begin::Refund button-->
+                        <div class="flex-shrink-0 p-4 p-lg-0 me-lg-2 mb-3">
+                            <a href="{{ route('fund_account') }}" class="btn btn-sm btn-primary fw-bolder w-100 w-lg-auto">Refund Dollar Account</a>
+                        </div>
+                        <!--end::Refund button-->
                     @endif
+
+                    <div class="card-body d-flex flex-column flex-lg-row flex-stack p-lg-5">
+                        <!--begin::Info-->
+                        <div class="d-flex flex-column align-items-lg-start text-lg-start">
+                            <!--begin::Title-->
+                            <h3 class="fs-2x line-height-lg mb-5">
+                                <span class="fw-bold">Your account balance</span>
+                                <br />
+                            </h3>
+                            <div class="table-responsive">
+                                <!--begin::Table-->
+                                <table class="table align-middle table-row-dashed gy-5">
+                                    <!--begin::Table head-->
+                                    <thead class="border-bottom border-gray-200 fs-7 fw-bolder">
+                                        <!--begin::Table row-->
+                                        <tr class="text-start text-muted text-uppercase gs-0">
+                                            <th class="min-w-100px">USD</th>
+                                            <th class="min-w-100px">EUR</th>
+                                            <th class="min-w-100px">NGN</th>
+                                        </tr>
+                                        <!--end::Table row-->
+                                    </thead>
+                                    <!--end::Table head-->
+                                    <!--begin::Table body-->
+                                    <tbody class="fs-4 fw-bold text-gray-600">
+                                        <tr>
+                                            <td>${{ number_format($user['latestCurrencyBalance']['USD'], 2) }}</td>
+                                            <td>€{{ number_format($user['latestCurrencyBalance']['EUR'], 2) }}</td>
+                                            <td>₦{{ number_format($user['latestCurrencyBalance']['NGN'], 2) }}</td>
+                                        </tr>
+                                    </tbody>
+                                    <!--end::Table body-->
+                                </table>
+                                <!--end::Table-->
+                            </div>
+
+                        </div>
+                        <!--end::Info-->
+                    </div>
+                    <!--end::Body-->
 
                 <p class="fs-4 mb-4">This calculation is deduced from <strong>Wise</strong> provided on <a href=“https://wise.com/gb/pricing/send-money” target=“_blank”>Wise Fees For Sending Money</a> webpage.</p>
 

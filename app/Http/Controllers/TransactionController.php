@@ -6,11 +6,13 @@ use App\Models\Charge;
 use App\Models\Currency;
 use App\Models\Transaction;
 use App\Traits\ExchangeRate;
+use App\Traits\CanPay;
 use Illuminate\Http\Request;
+;
 
 class TransactionController extends Controller
 {
-    use ExchangeRate;
+    use ExchangeRate, CanPay;
 
     /**
      * Display a listing of the resource.
@@ -47,7 +49,6 @@ class TransactionController extends Controller
     {
         // Validate user request
         (array) $validated = $this->validateRequest();
-
         $amount = Transaction::removeComma($validated['source_amount']);
         $currency = Currency::where('id', $validated['source_currency_id'])->firstOrFail();
 
@@ -55,19 +56,25 @@ class TransactionController extends Controller
             return back()->with('error', 'Oops! Your '.$currency['name'].' account balance is insufficient to complete this transaction.');
         }
 
+        // Return back if source amount is equal to zero
+        if($amount == 0.0){
+            return back()->with('error', 'Sorry! The source amount cannot be less than '.$currency['symbol'].'1.');
+        }
+
         // Calculate the target amount to be sent to recipient
         $validated = $this->calculation($validated, (float)$amount);
 
         try{
-            // Record first transaction
-            if(Transaction::firstEntryRecord($validated, $amount))
+            // Record first transaction for authenticated user
+            if(Transaction::doubleEntryRecord($validated, $amount))
             {
+                // Alternate data for recipient transaction record
                 $amount = $validated['targetAmount'];
-                $validated['type'] = 'Credit';
+                $validated = $this->alternateSourceRecord($validated);
             }
 
             // Record second transaction and redirect back to home
-            return (Transaction::secondEntryRecord($validated, $amount))
+            return (Transaction::doubleEntryRecord($validated, $amount))
             ? redirect()->route('home')->with('success', 'Your transaction was successful')
             : back()->with('error', 'Sorry! An error occured while make transfer');
         }catch (\Exception $ex){
@@ -76,7 +83,7 @@ class TransactionController extends Controller
             Transaction::failedTransaction($validated, $validated['targetAmount'], 'Credit', $validated['recipient_id'], auth()->id());
 
             // Redirect back to home
-            return redirect()->route('home')->with('success', 'Sorry! An error occured while make transaction');
+            return redirect()->route('home')->with('error', 'Sorry! An error occured while make transaction');
         }
     }
 
@@ -145,28 +152,37 @@ class TransactionController extends Controller
         if ($request->ajax()) {
             (array) $filters = $request->only('source_amount', 'source_currency_id', 'target_currency_id');
 
-            // Source amount
+            // If source currecnt is empty or `NaN`
+            if($filters['source_amount'] == 'NaN' || $filters['source_amount'] == ''){
+                return;
+            }
+
+            // Last currency balance
+            $latestCurrencyBalance = auth()->user()->latestCurrencyBalance;
+
+            // Determine source amount
             if($filters['source_currency_id'] == 1)
             {
-                if((float)$filters['source_amount'] > (float)auth()->user()->latestCurrencyBalance->EUR){
-                    $sourceAmount = auth()->user()->latestCurrencyBalance->EUR;
+                if((float)$filters['source_amount'] > (float)$latestCurrencyBalance->EUR){
+                    $sourceAmount = $latestCurrencyBalance->EUR;
                 }else{
                     $sourceAmount =  $filters['source_amount'];
                 }
             }else if($filters['source_currency_id'] == 2)
             {
-                if((float)$filters['source_amount'] > (float)auth()->user()->latestCurrencyBalance->NGN){
-                $sourceAmount = auth()->user()->latestCurrencyBalance->NGN;
+                if((float)$filters['source_amount'] > (float)$latestCurrencyBalance->NGN){
+                $sourceAmount = $latestCurrencyBalance->NGN;
                 }else{
                     $sourceAmount =  $filters['source_amount'];
                 }
             }else{
-                if((float)$filters['source_amount'] > (float)auth()->user()->latestCurrencyBalance->USD){
-                    $sourceAmount = auth()->user()->latestCurrencyBalance->USD;
+                if((float)$filters['source_amount'] > (float)$latestCurrencyBalance->USD){
+                    $sourceAmount = $latestCurrencyBalance->USD;
                 }else{
                     $sourceAmount =  $filters['source_amount'];
                 }
             }
+
             // User source currency
             $sourceCurrency = Currency::where('id', $filters['source_currency_id'])->firstOrFail();
 
@@ -226,8 +242,12 @@ class TransactionController extends Controller
         // Target amount after conversion
         $targetAmount = $amountToConvert * $rate;
 
+        // Current user
+        $user = auth()->user();
+
         return view($view, [
-            'recipients'                =>  \App\Models\User::where([['role_id', 2], ['id', '!=', auth()->id()]])->orderBy('name')->get(),
+            'user'                      => $user,
+            'recipients'                =>  \App\Models\User::where([['role_id', 2], ['id', '!=', $user['id']]])->orderBy('name')->get(),
             'currencies'                => Currency::get(),
             'sourceCurrency'            => $sourceCurrency,
             'targetCurrency'            => $targetCurrency,
@@ -292,6 +312,8 @@ class TransactionController extends Controller
         $validated['amountToConvert'] = $amount - $validated['transferFee'];
         $validated['targetAmount'] = $validated['amountToConvert'] * $validated['rate'];
         $validated['type'] = 'Debit';
+        $validated['currency_id'] = $validated['source_currency_id'];
+        $validated['sign'] = '-';
 
         return $validated;
     }
@@ -313,7 +335,7 @@ class TransactionController extends Controller
     /**
      * Convert the source amount and currency.
      * This is an ajax call on currency conversion.
-     * Present on keyup or on changce of source amount and currency.
+     * Present on keyup or on change of source amount and currency.
      *
      * @param  float  $source_amount
      * @param  int  $source_currency_id
@@ -349,5 +371,23 @@ class TransactionController extends Controller
                 'sourceCurrencyBalance'     => $sourceAmount,
             ];
         }
+    }
+
+    /**
+     * Alternate data for recipient transaction record.
+     *
+     * @param  array  $validated
+     *
+     * @return $validated
+     */
+    public function alternateSourceRecord($validated)
+    {
+        $validated['type'] = 'Credit';
+        $validated['user_id'] = $validated['recipient_id'];
+        $validated['recipient_id'] = auth()->id();
+        $validated['currency_id'] = $validated['target_currency_id'];
+        $validated['sign'] = '+';
+
+        return $validated;
     }
 }

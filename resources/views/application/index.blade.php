@@ -44,7 +44,6 @@
                                 <span class="fw-bold">Hello, {{ !empty($user['name']) ? Str::title($user['name']) : 'Unavailable' }}</span><br>
                                 <span class="fw-bold">Your account balance</span>
                                 <br />
-                                {{-- <span class="fw-bolder">${{ !empty($$user['latestCurrencyBalance']['USD']) ? number_format($user['latestCurrencyBalance']['USD']) : 0 }}</span> --}}
                             </h3>
                             <div class="table-responsive">
                                 <!--begin::Table-->

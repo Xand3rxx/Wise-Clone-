@@ -27,7 +27,7 @@ Auth::routes([
 Route::group(['middleware' => ['auth']], function () {
     Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
     Route::get('fund-account', [App\Http\Controllers\HomeController::class, 'fundAccount'])->name('fund_account');
-    
+
     Route::post('transaction/source-converter',  [TransactionController::class, 'sourceConverter'])->name('transaction.source_converter');
     Route::post('transaction/currency-balance',  [TransactionController::class, 'currencyBalance'])->name('transaction.currency_balance');
     Route::resource('transaction',  TransactionController::class);

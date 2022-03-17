@@ -54,18 +54,26 @@ class Transaction extends Model
      * @param  array  $validated
      * @param  float  $amount
      *
-     * @return \App\Model\Transaction|Null
+     * @return bool true|false
      */
-    public static function firstEntryRecord(array $validated, float $amount)
+    public static function doubleEntryRecord(array $validated, float $amount)
     {
         // Set `transactionCreated` to false before DB transaction
         (bool) $transactionCreated = false;
 
         DB::transaction(function () use ($validated, $amount, &$transactionCreated) {
 
-            $currencyBalance = auth()->user()->latestCurrencyBalance;
-            (int) $sourceCurrency = $validated['source_currency_id'];
+            // Get latest currency balanace of the validated user id
+            $currencyBalance = User::where('id', $validated['user_id'])->firstOrFail()->latestCurrencyBalance;
+            // dump($validated['sign']);
 
+            $sign = str_replace('', '', $validated['sign']);
+            // dd($sign);
+
+            // Get the currency ID to be matched
+            (int) $currencyId = $validated['currency_id'];
+
+            // Record transaction
             $transaction = Transaction::create([
                 'user_id'               => $validated['user_id'],
                 'recipient_id'          => $validated['recipient_id'],
@@ -81,64 +89,30 @@ class Transaction extends Model
                 'meta_data'             => $validated,
             ]);
 
-            CurrencyBalance::create([
-                'user_id'           => $validated['user_id'],
-                'transaction_id'    => $transaction['id'],
-                'USD'               => ($sourceCurrency == 3) ? ($currencyBalance->USD - $amount) : $currencyBalance->USD,
-                'EUR'               => ($sourceCurrency == 1) ? ($currencyBalance->EUR - $amount) : $currencyBalance->EUR,
-                'NGN'               => ($sourceCurrency == 2) ? ($currencyBalance->NGN - $amount) : $currencyBalance->NGN,
-            ]);
+            // Create a new currency balance record
+            if(auth()->id() == $validated['user_id']){
+                CurrencyBalance::create([
+                    'user_id'           => $validated['user_id'],
+                    'transaction_id'    => $transaction['id'],
+                    'USD'               => ($currencyId == 3) ? ($currencyBalance->USD - $amount) : $currencyBalance->USD,
+                    'EUR'               => ($currencyId == 1) ? ($currencyBalance->EUR - $amount) : $currencyBalance->EUR,
+                    'NGN'               => ($currencyId == 2) ? ($currencyBalance->NGN - $amount) : $currencyBalance->NGN,
+                ]);
+            }else{
+                CurrencyBalance::create([
+                    'user_id'           => $validated['user_id'],
+                    'transaction_id'    => $transaction['id'],
+                    'USD'               => ($currencyId == 3) ? ($currencyBalance->USD + $amount) : $currencyBalance->USD,
+                    'EUR'               => ($currencyId == 1) ? ($currencyBalance->EUR + $amount) : $currencyBalance->EUR,
+                    'NGN'               => ($currencyId == 2) ? ($currencyBalance->NGN + $amount) : $currencyBalance->NGN,
+                ]);
+            }
 
+
+            // Return true if both DB transaction succeed
             $transactionCreated = true;
 
-        }, 3);
-
-        return $transactionCreated;
-    }
-
-    /**
-     * Store the newly created credit transaction
-     *
-     * @param  array  $validated
-     * @param  float  $amount
-     *
-     * @return \App\Model\Transaction|Null
-     */
-    public static function secondEntryRecord(array $validated, float $amount)
-    {
-        // Set `transactionCreated` to false before DB transaction
-        (bool)$transactionCreated = false;
-
-        DB::transaction(function () use ($validated, $amount, &$transactionCreated) {
-            $currencyBalance = User::where('id', $validated['recipient_id'])->firstOrFail()->latestCurrencyBalance;
-            (int) $targetCurrency = $validated['target_currency_id'];
-
-            $transaction = Transaction::create([
-                'user_id'               => $validated['recipient_id'],
-                'recipient_id'          => $validated['user_id'],
-                'source_currency_id'    => $validated['source_currency_id'],
-                'target_currency_id'    => $validated['target_currency_id'],
-                'amount'                => self::removeComma($amount),
-                'rate'                  => $validated['rate'],
-                'transfer_fee'          => $validated['transferFee'],
-                'variable_fee'          => $validated['variableFee'],
-                'fixed_fee'             => $validated['fixedFee'],
-                'type'                  => self::TYPE[$validated['type']],
-                'status'                => self::STATUS['Success'],
-                'meta_data'             => $validated,
-            ]);
-
-            CurrencyBalance::create([
-                'user_id'           => $validated['recipient_id'],
-                'transaction_id'    => $transaction['id'],
-                'USD'               => ($targetCurrency == 3) ? ($currencyBalance->USD + $amount) : $currencyBalance->USD,
-                'EUR'               => ($targetCurrency == 1) ? ($currencyBalance->EUR + $amount) : $currencyBalance->EUR,
-                'NGN'               => ($targetCurrency == 2) ? ($currencyBalance->NGN + $amount) : $currencyBalance->NGN,
-            ]);
-
-            $transactionCreated = true;
-
-        }, 3);
+        }, 3); // Try 3 times before reporting an error
 
         return $transactionCreated;
     }
@@ -186,22 +160,6 @@ class Transaction extends Model
     public function amount()
     {
         return number_format($this->amount, 2);
-    }
-
-    /**
-     * Format the opening balance value
-     */
-    public function openingBalance()
-    {
-        return number_format($this->opening_balance);
-    }
-
-    /**
-     * Format the closing balance value
-     */
-    public function closingBalance()
-    {
-        return number_format($this->closing_balance);
     }
 
     /**
@@ -255,7 +213,7 @@ class Transaction extends Model
     /**
      * Get the sequivalent currency transaction
      */
-    public function CurrencyBalance()
+    public function currencyBalance()
     {
         return $this->hasOne(CurrencyBalance::class, 'transaction_id');
     }
