@@ -42,3 +42,5 @@ Password: `password`
 ![Screenshot 1](images/screen-1.png)
 
 ![Screenshot 2](images/screen-2.png)
+
+![Screenshot 3](images/screen-3.png)
