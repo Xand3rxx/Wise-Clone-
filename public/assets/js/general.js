@@ -266,3 +266,26 @@ function displayMessage(message, type) {
         title: message,
     });
 }
+
+
+$.ajax({
+        url: $route,
+        method: 'POST',
+        data: {
+            _token: $('meta[name="csrf-token"]').attr('content'),
+            'dish_uuid': $currentValue,
+            'dish_qty': $sourceCurrencyId,
+        },
+        // Return the result
+        success: function (result) {
+            //Return toat notification
+        },
+        error: function (jqXHR, testStatus, error) {
+            // Display error message
+        },
+        timeout: 8000,
+});
+
+
+
+
